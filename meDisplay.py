@@ -91,9 +91,10 @@ class meHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", 'no-cache')
         self.end_headers()
         if useMjpg:
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-i', display, '-r', frameRate, '-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            # -video_size 可以指定分辨率
+            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         else:
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-i', display, '-r', frameRate, '-c', 'h264', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'h264', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         try:
             shutil.copyfileobj(pipe.stdout, self.wfile)
         finally:
