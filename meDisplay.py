@@ -20,7 +20,7 @@ port = 65532
 ffmpeg = 'ffmpeg'
 
 # 默认编码器，可选：mjpg vp8 h264 hevc
-encoder = 'mjpg'
+encoder = 'h264'
 
 # 帧率
 frameRate = '60'
@@ -30,6 +30,9 @@ mjpgQuality = '7'
 
 # 其他模式下的码率
 mp4Bitrate = '10M'
+
+# 最大分辨率限制(横边)，超过自动缩小
+maxX = '2000'
 
 
 class meHandler(BaseHTTPRequestHandler):
@@ -95,7 +98,8 @@ class meHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", 'video/mp4')
         self.send_header("Cache-Control", 'no-cache')
         self.end_headers()
-        ffmpegArgs = [ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-preset', 'ultrafast', '-deadline', 'realtime', '-fflags', 'nobuffer']
+        # 更多参数 ffmpeg -h demuxer=avfoundation
+        ffmpegArgs = [ffmpeg, '-f', 'avfoundation', '-capture_cursor', 'true', '-framerate', frameRate, '-i', display, '-r', frameRate, '-vf', "scale='if(gt(iw\,{}),{},iw)':'if(gt(iw\,{}),-1,ih)'".format(maxX, maxX, maxX), '-preset', 'ultrafast', '-deadline', 'realtime', '-fflags', 'nobuffer']
         if enc == 'mjpg':
             # -video_size 可以指定分辨率
             pipe = subprocess.Popen(ffmpegArgs + ['-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
