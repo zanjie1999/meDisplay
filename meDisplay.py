@@ -1,11 +1,11 @@
 # coding=utf-8
 
 # 咩Display
-# 利用有浏览器的设备给mac做副屏
+# 利用有浏览器的设备给mac做副屏
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v1
+# v2.0
 
 import os, random, urllib, posixpath, shutil, subprocess, re
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -19,8 +19,8 @@ port = 65532
 # 不会装brew的看文档https://brew.sh/zh-cn/
 ffmpeg = 'ffmpeg'
 
-# 使用mjpeg编码
-useMjpg = True
+# 默认编码器，可选：mjpg vp8 h264 hevc
+encoder = 'mjpg'
 
 # 帧率
 frameRate = '60'
@@ -81,25 +81,31 @@ class meHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def display(self, display):
+    def display(self, display, enc):
         print("display", display)
         self.send_response(200)
-        if useMjpg:
+        if enc == 'mjpg':
             self.send_header("Content-type", 'multipart/x-mixed-replace; boundary=ffmpeg')
+        elif enc == 'vp8':
+            self.send_header("Content-type", 'video/webm')
         else:
-            self.send_header("Content-type", 'video/mp4')
+            self.send_header("Content-type", 'video/x-flv')
         self.send_header("Cache-Control", 'no-cache')
         self.end_headers()
-        if useMjpg:
+        if enc == 'mjpg':
             # -video_size 可以指定分辨率
             pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+        elif enc == 'vp8':
+            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'libvpx', '-speed', '8', '-preset', 'ultrafast', '-deadline', 'realtime', '-b:v', '10M', '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         else:
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'h264', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', enc + '_videotoolbox', '-preset', 'ultrafast', '-tune', 'zerolatency', '-f', 'flv', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         try:
             shutil.copyfileobj(pipe.stdout, self.wfile)
         finally:
             self.wfile.flush()
             pipe.terminate()
+            pipe.kill()
+
 
     def indexPage(self):
         self.send_response(200)
@@ -110,7 +116,8 @@ class meHandler(BaseHTTPRequestHandler):
         t = subprocess.getoutput(ffmpeg + ' -f avfoundation -list_devices true -i "" 2>&1 | grep "on au" -B 10 | grep "on vi" -A 10 | grep " \\["').split('\n')
         self.wfile.write('<h1>咩Display</h1>'.encode("utf-8"))
         for i in t:
-            self.wfile.write(('<a href="/' + i[39:40] + '"><h2>' + i[38:] + '</h2></a>').encode("utf-8"))
+            sp = i.split(' [')[1]
+            self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
 
         # self.wfile.write('''
         # <h1>咩Display</h1>
@@ -123,7 +130,7 @@ class meHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", 'text/html; charset=UTF-8')
         self.end_headers()
-        if useMjpg:
+        if encoder == 'mjpg':
             self.wfile.write(('''
             <body style="margin: 0; background-color: #000" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
             <img style="width: 100%; height: 100%; object-fit: contain" src="/v/''' + display + '''" ></img>
@@ -159,7 +166,15 @@ class meHandler(BaseHTTPRequestHandler):
         elif re.match(r'^/[0-9]+$', self.path):
             self.videoPage(self.path[1:])
         elif re.match(r'^/v/[0-9]+$', self.path):
-            self.display(self.path[3:])
+            self.display(self.path[3:], encoder)
+        elif re.match(r'^/mjpg/[0-9]+$', self.path):
+            self.display(self.path[6:], 'mjpg')
+        elif re.match(r'^/vp8/[0-9]+$', self.path):
+            self.display(self.path[5:], 'vp8')
+        elif re.match(r'^/h264/[0-9]+$', self.path):
+            self.display(self.path[6:], 'h264')
+        elif re.match(r'^/hevc/[0-9]+$', self.path):
+            self.display(self.path[6:], 'hevc')
         else:
             path = self.translate_path(self.path)
             self.play(path)
@@ -167,7 +182,7 @@ class meHandler(BaseHTTPRequestHandler):
 
 
 print("咩Display")
-print("使用MJPG编码", useMjpg, "质量", mjpgQuality)
+print("默认编码器", encoder, "mjpg质量", mjpgQuality)
 print("端口", port)
 print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
 HTTPServer(("", port), meHandler).serve_forever()
