@@ -20,7 +20,7 @@ port = 65532
 ffmpeg = 'ffmpeg'
 
 # 默认编码器，可选：mjpg vp8 h264 hevc
-encoder = 'h264'
+encoder = 'mjpg'
 
 # 帧率
 frameRate = '60'
@@ -32,7 +32,7 @@ mjpgQuality = '7'
 mp4Bitrate = '10M'
 
 # 最大分辨率限制(横边)，超过自动缩小
-maxX = '2000'
+maxX = '1920'
 
 
 class meHandler(BaseHTTPRequestHandler):
