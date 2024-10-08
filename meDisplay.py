@@ -94,7 +94,7 @@ class meHandler(BaseHTTPRequestHandler):
         self.end_headers()
         if enc == 'mjpg':
             # -video_size 可以指定分辨率
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-preset', 'ultrafast', '-deadline', 'realtime', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         elif enc == 'vp8':
             pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'libvpx', '-speed', '8', '-preset', 'ultrafast', '-deadline', 'realtime', '-b:v', '10M', '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         else:
