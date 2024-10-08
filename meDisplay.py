@@ -28,6 +28,9 @@ frameRate = '60'
 # 质量 1质量最好 默认是7
 mjpgQuality = '7'
 
+# 其他模式下的码率
+mp4Bitrate = '10M'
+
 
 class meHandler(BaseHTTPRequestHandler):
     def translate_path(self, path):
@@ -89,16 +92,18 @@ class meHandler(BaseHTTPRequestHandler):
         elif enc == 'vp8':
             self.send_header("Content-type", 'video/webm')
         else:
-            self.send_header("Content-type", 'video/x-flv')
+            self.send_header("Content-type", 'video/mp4')
         self.send_header("Cache-Control", 'no-cache')
         self.end_headers()
+        ffmpegArgs = [ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-preset', 'ultrafast', '-deadline', 'realtime', '-fflags', 'nobuffer']
         if enc == 'mjpg':
             # -video_size 可以指定分辨率
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-preset', 'ultrafast', '-deadline', 'realtime', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         elif enc == 'vp8':
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', 'libvpx', '-speed', '8', '-preset', 'ultrafast', '-deadline', 'realtime', '-b:v', '10M', '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libvpx', '-speed', '8', '-b:v', mp4Bitrate, '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         else:
-            pipe = subprocess.Popen([ffmpeg, '-f', 'avfoundation', '-framerate', frameRate, '-i', display, '-r', frameRate, '-c', enc + '_videotoolbox', '-preset', 'ultrafast', '-tune', 'zerolatency', '-f', 'flv', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', enc + '_videotoolbox', '-b:v', mp4Bitrate, '-movflags', '+frag_keyframe+empty_moov', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            # pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libx264', '-movflags', '+frag_keyframe+empty_moov', '-fflags', 'nobuffer', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         try:
             shutil.copyfileobj(pipe.stdout, self.wfile)
         finally:
@@ -139,7 +144,7 @@ class meHandler(BaseHTTPRequestHandler):
         else:
             self.wfile.write(('''
             <body style="margin: 0; background-color: #000" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
-            <video style="width: 100%; height: 100%; object-fit: contain" src="/v/''' + display + '''" controls autoplay></video>
+            <video id="me" style="width: 100%; height: 100%; object-fit: contain" src="/v/''' + display + '''" autoplay playsinline></video>
             </body>
             ''').encode("utf-8"))
 
