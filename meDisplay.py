@@ -20,7 +20,7 @@ port = 65532
 ffmpeg = 'ffmpeg'
 
 # 默认编码器，可选：mjpg vp8 h264 hevc
-encoder = 'h264'
+encoder = 'mjpg'
 
 # 帧率
 frameRate = '60'
@@ -119,7 +119,7 @@ class meHandler(BaseHTTPRequestHandler):
         else:
             c = enc + '_videotoolbox'
             if ost != 1:
-                if enc == 'h265':
+                if enc == 'hevc':
                     c = 'libx265'
                 elif enc == 'h264':
                     c = 'libx264'
