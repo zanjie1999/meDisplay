@@ -5,7 +5,7 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v2.1
+# v2.2
 
 import os, random, urllib, posixpath, shutil, subprocess, re, traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -120,10 +120,17 @@ class meHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", 'text/html; charset=UTF-8')
         self.end_headers()
-
+        
+        self.wfile.write('<h1>咩Display</h1>'.encode("utf-8"))
+        
+        # 检查是否安装了ffmpeg
+        t = subprocess.getoutput(ffmpeg)
+        if 'ffmpeg version' not in t:
+            self.wfile.write(('你未正确安装或配置ffmpeg，请查看文档：<br>' + t.replace('\n', '<br>')).encode("utf-8"))
+            return
+            
         # 获取所有的采集设备
         t = subprocess.getoutput(ffmpeg + ' -f avfoundation -list_devices true -i "" 2>&1 | grep "on au" -B 10 | grep "on vi" -A 10 | grep " \\["').split('\n')
-        self.wfile.write('<h1>咩Display</h1>'.encode("utf-8"))
         try:
             for i in t:
                 sp = i.split(' [')[1]
