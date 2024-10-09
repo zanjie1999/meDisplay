@@ -5,7 +5,7 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v2.2
+# v2.3
 
 import os, random, urllib, posixpath, shutil, subprocess, re, traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -122,12 +122,6 @@ class meHandler(BaseHTTPRequestHandler):
         self.end_headers()
         
         self.wfile.write('<h1>咩Display</h1>'.encode("utf-8"))
-        
-        # 检查是否安装了ffmpeg
-        t = subprocess.getoutput(ffmpeg)
-        if 'ffmpeg version' not in t:
-            self.wfile.write(('你未正确安装或配置ffmpeg，请查看文档：<br>' + t.replace('\n', '<br>')).encode("utf-8"))
-            return
             
         # 获取所有的采集设备
         t = subprocess.getoutput(ffmpeg + ' -f avfoundation -list_devices true -i "" 2>&1 | grep "on au" -B 10 | grep "on vi" -A 10 | grep " \\["').split('\n')
@@ -137,7 +131,7 @@ class meHandler(BaseHTTPRequestHandler):
                 self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
         except:
             traceback.print_exc()
-            self.wfile.write(('无法自动获取到设备，请发给咩咩，设备信息：<br>' + '<br>'.join(t) + '<br><br>' + traceback.format_exc().replace('\n', '<br>')).encode("utf-8"))
+            self.wfile.write(('无法自动获取到设备，请将下面的内容发给咩咩：<br>' + '<br>'.join(t) + '<br><br>' + traceback.format_exc().replace('\n', '<br>')).encode("utf-8"))
 
         # self.wfile.write('''
         # <h1>咩Display</h1>
@@ -205,4 +199,8 @@ print("咩Display")
 print("默认编码器", encoder, "mjpg质量", mjpgQuality)
 print("端口", port)
 print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
-HTTPServer(("", port), meHandler).serve_forever()
+t = subprocess.getoutput(ffmpeg)
+if 'ffmpeg version' not in t:
+    print('你未正确安装或配置ffmpeg的路径，请查看文档：\n' + t)
+else:
+    HTTPServer(("", port), meHandler).serve_forever()
