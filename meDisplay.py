@@ -5,9 +5,9 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v2.3
+# v3.0
 
-import os, random, urllib, posixpath, shutil, subprocess, re, traceback
+import os, random, urllib, posixpath, shutil, subprocess, re, traceback, sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # 端口号
@@ -20,7 +20,7 @@ port = 65532
 ffmpeg = 'ffmpeg'
 
 # 默认编码器，可选：mjpg vp8 h264 hevc
-encoder = 'mjpg'
+encoder = 'h264'
 
 # 帧率
 frameRate = '60'
@@ -33,6 +33,13 @@ mp4Bitrate = '10M'
 
 # 最大分辨率限制(横边)，超过自动缩小
 maxX = '1920'
+
+
+ost = 1
+if sys.platform.startswith('win32'):
+    ost=2
+elif sys.platform.startswith('linux'):
+    ost=3
 
 
 class meHandler(BaseHTTPRequestHandler):
@@ -90,7 +97,7 @@ class meHandler(BaseHTTPRequestHandler):
     def display(self, display, enc):
         print("display", display)
         self.send_response(200)
-        if enc == 'mjpg':
+        if enc == 'mjpg' or enc == 'win':
             self.send_header("Content-type", 'multipart/x-mixed-replace; boundary=ffmpeg')
         elif enc == 'vp8':
             self.send_header("Content-type", 'video/webm')
@@ -99,14 +106,26 @@ class meHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", 'no-cache')
         self.end_headers()
         # 更多参数 ffmpeg -h demuxer=avfoundation
-        ffmpegArgs = [ffmpeg, '-f', 'avfoundation', '-capture_cursor', 'true', '-framerate', frameRate, '-i', display, '-r', frameRate, '-vf', "scale='if(gt(iw\\,{}),{},iw)':'if(gt(iw\\,{}),-1,ih)'".format(maxX, maxX, maxX), '-preset', 'ultrafast', '-deadline', 'realtime', '-fflags', 'nobuffer']
+        ffmpegArgs = [ffmpeg, '-f', 'avfoundation', '-capture_cursor', 'true', '-framerate', frameRate, '-i', display]
+        if ost == 2:
+            ffmpegArgs = [ffmpeg, '-f', 'gdigrab', '-framerate', frameRate, '-i', 'desktop']
+        ffmpegArgs += ['-r', frameRate, '-vf', "scale='if(gt(iw\\,{}),{},iw)':'if(gt(iw\\,{}),-1,ih)'".format(maxX, maxX, maxX), '-preset', 'ultrafast', '-deadline', 'realtime', '-fflags', 'nobuffer']
+
         if enc == 'mjpg':
             # -video_size 可以指定分辨率
             pipe = subprocess.Popen(ffmpegArgs + ['-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         elif enc == 'vp8':
             pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libvpx', '-speed', '8', '-b:v', mp4Bitrate, '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         else:
-            pipe = subprocess.Popen(ffmpegArgs + ['-c', enc + '_videotoolbox', '-b:v', mp4Bitrate, '-movflags', '+frag_keyframe+empty_moov', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            c = enc + '_videotoolbox'
+            if ost != 1:
+                if enc == 'h265':
+                    c = 'libx265'
+                elif enc == 'h264':
+                    c = 'libx264'
+                else:
+                    c = 'lib' + enc
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', c, '-b:v', mp4Bitrate, '-movflags', '+frag_keyframe+empty_moov', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
             # pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libx264', '-movflags', '+frag_keyframe+empty_moov', '-fflags', 'nobuffer', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         try:
             shutil.copyfileobj(pipe.stdout, self.wfile)
@@ -122,16 +141,21 @@ class meHandler(BaseHTTPRequestHandler):
         self.end_headers()
         
         self.wfile.write('<h1>咩Display</h1>'.encode("utf-8"))
-            
-        # 获取所有的采集设备
-        t = subprocess.getoutput(ffmpeg + ' -f avfoundation -list_devices true -i "" 2>&1 | grep "on au" -B 10 | grep "on vi" -A 10 | grep " \\["').split('\n')
-        try:
-            for i in t:
-                sp = i.split(' [')[1]
-                self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
-        except:
-            traceback.print_exc()
-            self.wfile.write(('无法自动获取到设备，请将下面的内容发给咩咩：<br>' + '<br>'.join(t) + '<br><br>' + traceback.format_exc().replace('\n', '<br>')).encode("utf-8"))
+        
+        if ost == 1:
+            # 获取所有的采集设备
+            t = subprocess.getoutput(ffmpeg + ' -f avfoundation -list_devices true -i "" 2>&1 | grep "on au" -B 10 | grep "on vi" -A 10 | grep " \\["').split('\n')
+            try:
+                for i in t:
+                    sp = i.split(' [')[1]
+                    self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
+            except:
+                traceback.print_exc()
+                self.wfile.write(('无法自动获取到设备，请将下面的内容发给咩咩：<br>' + '<br>'.join(t) + '<br><br>' + traceback.format_exc().replace('\n', '<br>')).encode("utf-8"))
+        elif ost == 2:
+            self.wfile.write('<a href="/0"><h2>显示器</h2></a>'.encode("utf-8"))
+        else:
+            self.wfile.write('可能还不支持您的操作系统'.encode("utf-8"))
 
         # self.wfile.write('''
         # <h1>咩Display</h1>
@@ -177,6 +201,9 @@ class meHandler(BaseHTTPRequestHandler):
         print(self.path)
         if self.path == '/':
             self.indexPage()
+        elif self.path == '/favicon.ico': 
+            self.send_response(404)
+            self.end_headers()
         elif re.match(r'^/[0-9]+$', self.path):
             self.videoPage(self.path[1:])
         elif re.match(r'^/v/[0-9]+$', self.path):
