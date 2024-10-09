@@ -5,7 +5,7 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v2.0
+# v2.1
 
 import os, random, urllib, posixpath, shutil, subprocess, re, traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
