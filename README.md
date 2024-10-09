@@ -14,7 +14,7 @@
     依赖 `ffmpeg` 建议使用 `brew` 进行安装  
     在终端输入:  
     ```
-    brew install mjpg
+    brew install ffmpeg
     ```
     如果你连 `brew` 这个命令都没有，那请参考他的文档，或者百度一下吧  
     https://brew.sh/zh-cn/
