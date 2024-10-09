@@ -7,7 +7,7 @@
 # Sparkle
 # v2.0
 
-import os, random, urllib, posixpath, shutil, subprocess, re
+import os, random, urllib, posixpath, shutil, subprocess, re, traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # 端口号
@@ -124,9 +124,13 @@ class meHandler(BaseHTTPRequestHandler):
         # 获取所有的采集设备
         t = subprocess.getoutput(ffmpeg + ' -f avfoundation -list_devices true -i "" 2>&1 | grep "on au" -B 10 | grep "on vi" -A 10 | grep " \\["').split('\n')
         self.wfile.write('<h1>咩Display</h1>'.encode("utf-8"))
-        for i in t:
-            sp = i.split(' [')[1]
-            self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
+        try:
+            for i in t:
+                sp = i.split(' [')[1]
+                self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
+        except:
+            traceback.print_exc()
+            self.wfile.write(('无法自动获取到设备，请发给咩咩，设备信息：<br>' + '<br>'.join(t) + '<br><br>' + traceback.format_exc().replace('\n', '<br>')).encode("utf-8"))
 
         # self.wfile.write('''
         # <h1>咩Display</h1>
