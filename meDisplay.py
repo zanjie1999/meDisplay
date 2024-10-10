@@ -5,7 +5,7 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v3.0
+# v3.2
 
 import os, random, urllib, posixpath, shutil, subprocess, re, traceback, sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -109,6 +109,8 @@ class meHandler(BaseHTTPRequestHandler):
         ffmpegArgs = [ffmpeg, '-f', 'avfoundation', '-capture_cursor', 'true', '-framerate', frameRate, '-i', display]
         if ost == 2:
             ffmpegArgs = [ffmpeg, '-f', 'gdigrab', '-framerate', frameRate, '-i', 'desktop']
+        elif ost == 3:
+            ffmpegArgs = [ffmpeg, '-f', 'x11grab', '-framerate', frameRate, '-i', ':0.0']
         ffmpegArgs += ['-r', frameRate, '-vf', "scale='if(gt(iw\\,{}),{},iw)':'if(gt(iw\\,{}),-1,ih)'".format(maxX, maxX, maxX), '-preset', 'ultrafast', '-deadline', 'realtime', '-fflags', 'nobuffer']
 
         if enc == 'mjpg':
@@ -148,14 +150,12 @@ class meHandler(BaseHTTPRequestHandler):
             try:
                 for i in t:
                     sp = i.split(' [')[1]
-                    self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp + '</h2></a>').encode("utf-8"))
+                    self.wfile.write(('<a href="/' + sp.split(']')[0] + '"><h2>[' + sp.replace('Capture screen ', '显示器') + '</h2></a>').encode("utf-8"))
             except:
                 traceback.print_exc()
                 self.wfile.write(('无法自动获取到设备，请将下面的内容发给咩咩：<br>' + '<br>'.join(t) + '<br><br>' + traceback.format_exc().replace('\n', '<br>')).encode("utf-8"))
-        elif ost == 2:
-            self.wfile.write('<a href="/0"><h2>显示器</h2></a>'.encode("utf-8"))
         else:
-            self.wfile.write('可能还不支持您的操作系统'.encode("utf-8"))
+            self.wfile.write('<a href="/0"><h2>镜像显示器</h2></a>'.encode("utf-8"))
 
         # self.wfile.write('''
         # <h1>咩Display</h1>
@@ -223,8 +223,7 @@ class meHandler(BaseHTTPRequestHandler):
 
 
 print("咩Display")
-print("默认编码器", encoder, "mjpg质量", mjpgQuality)
-print("端口", port)
+print("默认编码器", encoder, "mjpg质量", mjpgQuality, '视频码率', mp4Bitrate)
 print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
 t = subprocess.getoutput(ffmpeg)
 if 'ffmpeg version' not in t:
