@@ -5,7 +5,7 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v3.2
+# v4.0
 
 import os, random, urllib, posixpath, shutil, subprocess, re, traceback, sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -168,18 +168,25 @@ class meHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", 'text/html; charset=UTF-8')
         self.end_headers()
+        self.wfile.write('''<style>
+                body {
+                    margin: 0; background-color: #000; display: flex; justify-content: center; align-items: center;
+                }    
+                img, video {
+                    width: 100%; height: 100%; object-fit: contain;
+                }
+                @media (max-aspect-ratio: 1/1) {
+                    img, video {
+                        transform: rotate(90deg); width: 100vh; height: 100vw;
+                    }
+                }
+            </style>
+            <body onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
+        '''.encode("utf-8"))
         if encoder == 'mjpg':
-            self.wfile.write(('''
-            <body style="margin: 0; background-color: #000" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
-            <img style="width: 100%; height: 100%; object-fit: contain" src="/v/''' + display + '''" ></img>
-            </body>
-            ''').encode("utf-8"))
+           self.wfile.write(('<img src="/v/' + display + '"></img> </body>').encode("utf-8"))
         else:
-            self.wfile.write(('''
-            <body style="margin: 0; background-color: #000" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
-            <video id="me" style="width: 100%; height: 100%; object-fit: contain" src="/v/''' + display + '''" autoplay playsinline></video>
-            </body>
-            ''').encode("utf-8"))
+            self.wfile.write(('<video src="/v/' + display + '" autoplay playsinline></video> </body>').encode("utf-8"))
 
     def videoPage2(self, display):
         self.send_response(200)
