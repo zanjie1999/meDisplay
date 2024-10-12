@@ -5,7 +5,7 @@
 # 就是实时转码，也能放视频
 # 手搓了个简易http服务
 # Sparkle
-# v4.0
+# v4.1
 
 import os, random, urllib, posixpath, shutil, subprocess, re, traceback, sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -232,6 +232,7 @@ class meHandler(BaseHTTPRequestHandler):
 print("咩Display")
 print("默认编码器", encoder, "mjpg质量", mjpgQuality, '视频码率', mp4Bitrate)
 print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
+print('http://{}:{}'.format(subprocess.getoutput("ifconfig|grep en0 -A 2|grep 'inet '|awk '{print$2}'"), port))
 t = subprocess.getoutput(ffmpeg)
 if 'ffmpeg version' not in t:
     print('你未正确安装或配置ffmpeg的路径，请查看文档：\n' + t)
