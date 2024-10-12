@@ -232,7 +232,9 @@ class meHandler(BaseHTTPRequestHandler):
 print("咩Display")
 print("默认编码器", encoder, "mjpg质量", mjpgQuality, '视频码率', mp4Bitrate)
 print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
-print('http://{}:{}'.format(subprocess.getoutput("ifconfig|grep en0 -A 2|grep 'inet '|awk '{print$2}'"), port))
+if ost == 1:
+    print('http://{}:{}'.format(subprocess.getoutput("ifconfig|grep en0 -A 2|grep 'inet '|awk '{print$2}'"), port))
+    
 t = subprocess.getoutput(ffmpeg)
 if 'ffmpeg version' not in t:
     print('你未正确安装或配置ffmpeg的路径，请查看文档：\n' + t)
