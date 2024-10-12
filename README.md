@@ -75,3 +75,5 @@ brew cask install android-platform-tools
 * [x] 在 视频播放器 中进行串流
 * [ ] mjpg动态码率
 * [ ] 降低使用hevc/h264进行串流在浏览器中的延迟
+* [x] 适配Safari
+* [ ] Safari中hevc/h264/vp8模式的支持

@@ -173,7 +173,7 @@ class meHandler(BaseHTTPRequestHandler):
                     margin: 0; background-color: #000; display: flex; justify-content: center; align-items: center;
                 }    
                 img, video {
-                    width: 100%; height: 100%; object-fit: contain;
+                    width: 100vw; height: 100vh; object-fit: contain;
                 }
                 @media (max-aspect-ratio: 1/1) {
                     img, video {
@@ -181,7 +181,40 @@ class meHandler(BaseHTTPRequestHandler):
                     }
                 }
             </style>
-            <body onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
+            <script>
+                function requestFullScreen(me) {
+                    if (me.requestFullscreen) {
+                        me.requestFullscreen();
+                    } else if (me.mozRequestFullScreen) {
+                        me.mozRequestFullScreen();
+                    } else if (me.webkitRequestFullscreen) {
+                        me.webkitRequestFullscreen();
+                    } else if (me.msRequestFullscreen) {
+                        me.msRequestFullscreen();
+                    }
+                }
+                function exitFullScreen() {
+                    if(document.exitFullScreen) {
+                        document.exitFullScreen();
+                    } else if(document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if(document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if(document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+                function getFullscreenElement() {
+                    return (        
+                        document.fullscreenElement || document.mozFullScreenElement ||
+                        document.msFullScreenElement || document.webkitFullscreenElement
+                    );
+                }
+                function meFullScreen() {
+                    getFullscreenElement() ? exitFullScreen() : requestFullScreen(document.documentElement);
+                }
+            </script>
+            <body onclick="meFullScreen()">
         '''.encode("utf-8"))
         if encoder == 'mjpg':
            self.wfile.write(('<img src="/v/' + display + '"></img> </body>').encode("utf-8"))
@@ -193,11 +226,11 @@ class meHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", 'text/html; charset=UTF-8')
         self.end_headers()
         self.wfile.write(('''
-        <body style="margin: 0; background-color: #000" onclick="document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()">
+        <body style="margin: 0; background-color: #000" onclick="document.fullscreenmement ? document.exitFullscreen() : document.documentmement.requestFullscreen()">
         <video style="width: 100%; height: 100%; object-fit: contain" id="me" controls autoplay></video>
         <script>
             fetch("/v/''' + display + '''").then(response => response.blob()).then(blob => {
-                document.getElementById("me").src = URL.createObjectURL(blob);
+                document.getmementById("me").src = URL.createObjectURL(blob);
             })
         </script>
         </body>
@@ -234,7 +267,7 @@ print("默认编码器", encoder, "mjpg质量", mjpgQuality, '视频码率', mp4
 print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
 if ost == 1:
     print('http://{}:{}'.format(subprocess.getoutput("ifconfig|grep en0 -A 2|grep 'inet '|awk '{print$2}'"), port))
-    
+
 t = subprocess.getoutput(ffmpeg)
 if 'ffmpeg version' not in t:
     print('你未正确安装或配置ffmpeg的路径，请查看文档：\n' + t)
