@@ -20,7 +20,7 @@ port = 65532
 ffmpeg = 'ffmpeg'
 
 # 默认编码器，可选：mjpg vp8 h264 hevc
-encoder = 'h264'
+encoder = 'mjpg'
 
 # 帧率
 frameRate = '60'
