@@ -20,7 +20,7 @@ port = 65532
 ffmpeg = 'ffmpeg'
 
 # 默认编码器，可选：mjpg vp8 h264 hevc
-encoder = 'mjpg'
+encoder = 'h264'
 
 # 帧率
 frameRate = '60'
@@ -115,9 +115,9 @@ class meHandler(BaseHTTPRequestHandler):
 
         if enc == 'mjpg':
             # -video_size 可以指定分辨率
-            pipe = subprocess.Popen(ffmpegArgs + ['-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', 'mjpeg', '-f', 'mpjpeg', '-q', mjpgQuality, '-'], stdout=subprocess.PIPE, bufsize=10 ** 5)
         elif enc == 'vp8':
-            pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libvpx', '-speed', '8', '-b:v', mp4Bitrate, '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libvpx', '-speed', '8', '-b:v', mp4Bitrate, '-f', 'webm', '-'], stdout=subprocess.PIPE, bufsize=10 ** 5)
         else:
             c = enc + '_videotoolbox'
             if ost != 1:
@@ -127,7 +127,7 @@ class meHandler(BaseHTTPRequestHandler):
                     c = 'libx264'
                 else:
                     c = 'lib' + enc
-            pipe = subprocess.Popen(ffmpegArgs + ['-c', c, '-b:v', mp4Bitrate, '-movflags', '+frag_keyframe+empty_moov', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
+            pipe = subprocess.Popen(ffmpegArgs + ['-c', c, '-b:v', mp4Bitrate, '-movflags', '+frag_keyframe+empty_moov', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 5)
             # pipe = subprocess.Popen(ffmpegArgs + ['-c', 'libx264', '-movflags', '+frag_keyframe+empty_moov', '-fflags', 'nobuffer', '-f', 'mp4', '-'], stdout=subprocess.PIPE, bufsize=10 ** 8)
         try:
             shutil.copyfileobj(pipe.stdout, self.wfile)
