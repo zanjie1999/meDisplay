@@ -23,7 +23,7 @@ ffmpeg = 'ffmpeg'
 encoder = 'mjpg'
 
 # 帧率
-frameRate = '60'
+frameRate = '30'
 
 # 质量 1质量最好 默认是7
 mjpgQuality = '7'
@@ -268,8 +268,10 @@ print('http://{}:{}'.format(subprocess.getoutput('hostname'), port))
 if ost == 1:
     print('http://{}:{}'.format(subprocess.getoutput("ifconfig|grep en0 -A 2|grep 'inet '|awk '{print$2}'"), port))
 
-t = subprocess.getoutput(ffmpeg)
+t = subprocess.getoutput(ffmpeg + ' -devices')
 if 'ffmpeg version' not in t:
     print('你未正确安装或配置ffmpeg的路径，请查看文档：\n' + t)
+elif ost == 1 and 'avfoundation' not in t:
+    print('你安装的ffmpeg不支持avfoundation，无法进行屏幕采集，请查看文档：\n' + t)
 else:
     HTTPServer(("", port), meHandler).serve_forever()
