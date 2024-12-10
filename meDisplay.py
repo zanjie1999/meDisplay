@@ -191,6 +191,8 @@ class meHandler(BaseHTTPRequestHandler):
                         me.webkitRequestFullscreen();
                     } else if (me.msRequestFullscreen) {
                         me.msRequestFullscreen();
+                    } else {
+                        alert('iOS的Safari不支持全屏')
                     }
                 }
                 function exitFullScreen() {
