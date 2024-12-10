@@ -23,7 +23,7 @@ ffmpeg = 'ffmpeg'
 encoder = 'mjpg'
 
 # 帧率
-frameRate = '30'
+frameRate = '60'
 
 # 质量 1质量最好 默认是7
 mjpgQuality = '7'
@@ -173,11 +173,11 @@ class meHandler(BaseHTTPRequestHandler):
                     margin: 0; background-color: #000; display: flex; justify-content: center; align-items: center;
                 }    
                 img, video {
-                    width: 100vw; height: 100vh; object-fit: contain;
+                    width: 100vw; height: 100vh; width: 100dvw; height: 100dvh; object-fit: contain;
                 }
                 @media (max-aspect-ratio: 1/1) {
                     img, video {
-                        transform: rotate(90deg); width: 100vh; height: 100vw;
+                        transform: rotate(90deg); width: 100vh; height: 100vw; width: 100dvw; height: 100dvh;
                     }
                 }
             </style>
