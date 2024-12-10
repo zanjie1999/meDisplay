@@ -177,7 +177,7 @@ class meHandler(BaseHTTPRequestHandler):
                 }
                 @media (max-aspect-ratio: 1/1) {
                     img, video {
-                        transform: rotate(90deg); width: 100vh; height: 100vw; width: 100dvw; height: 100dvh;
+                        transform: rotate(90deg); width: 100vh; height: 100vw; width: 100dvh; height: 100dvw;
                     }
                 }
             </style>
