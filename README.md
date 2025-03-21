@@ -59,7 +59,7 @@ adb reverse tcp:65532 tcp:65532
 ```
 如果你没有adb，这样安装
 ```
-brew cask install android-platform-tools
+brew install --cask android-platform-tools
 ```
 这样可以直接在设备的浏览器上打开 http://127.0.0.1:65532 来访问电脑上的服务  
 请注意，如果你路由的性能足够牛逼，延迟可能会比有线adb端口转发还低，比如这个133ms
