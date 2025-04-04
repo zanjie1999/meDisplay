@@ -78,3 +78,9 @@ brew install --cask android-platform-tools
 * [ ] 降低使用hevc/h264进行串流在浏览器中的延迟
 * [x] 适配Safari/FireFox
 * [ ] Safari中hevc/h264/vp8模式的支持
+
+
+
+### 协议 咩License
+使用此项目视为您已阅读并同意遵守 [此LICENSE](https://github.com/zanjie1999/LICENSE)   
+Using this project is deemed to indicate that you have read and agreed to abide by [this LICENSE](https://github.com/zanjie1999/LICENSE)   
