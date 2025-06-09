@@ -80,6 +80,9 @@ brew install --cask android-platform-tools
 * [ ] Safari中hevc/h264/vp8模式的支持
 
 
+## Star History
+[![Star History Chart](https://api.star-history.com/svg?repos=zanjie1999/meDisplay&type=Date)](https://www.star-history.com/#zanjie1999/meDisplay&Date)
+
 
 ### 协议 咩License
 使用此项目视为您已阅读并同意遵守 [此LICENSE](https://github.com/zanjie1999/LICENSE)   
